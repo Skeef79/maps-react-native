@@ -12,7 +12,7 @@ import {
 import { db } from "./utils";
 
 function DetailsScreen({ route, navigation }) {
-    const { itemId } = route.params;
+    const { itemId, name } = route.params;
 
     const [pictures, setPictures] = useState([]);
 
@@ -87,7 +87,7 @@ function DetailsScreen({ route, navigation }) {
                     alignItems: "center",
                 }}
             >
-                <Text>Marker {itemId}</Text>
+                <Text style={{ fontWeight: "bold", fontSize: 20 }}>{name}</Text>
 
                 <View
                     style={{

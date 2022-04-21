@@ -5,6 +5,7 @@ import { View } from "react-native";
 import { MarkerContext, db } from "./utils";
 import * as Notifications from "expo-notifications";
 import haversineDistance from "haversine-distance";
+import DialogInput from "react-native-dialog-input";
 
 const startRegion = {
     latitude: 57.78825,
@@ -52,18 +53,19 @@ function HomeScreen({ navigation }) {
         });
     }, []);
 
-    const addMarker = (e) => {
-        const coords = e.nativeEvent.coordinate;
+    const addMarker = (name, coords) => {
+        //const coords = e.nativeEvent.coordinate;
+
         db.transaction((tx) => {
             tx.executeSql(
-                "insert into markers (latitude, longitude) values(?,?)",
-                [coords.latitude, coords.longitude]
+                "insert into markers (name, latitude, longitude) values(?,?,?)",
+                [name, coords.latitude, coords.longitude]
             );
             tx.executeSql(
                 "select * from markers",
                 [],
                 (_, { rows: { _array } }) => {
-                    console.log("Add");
+                    console.log("Marker added");
                     setMarkerCoords(_array);
                 },
                 (_, e) => {
@@ -73,28 +75,57 @@ function HomeScreen({ navigation }) {
         });
     };
 
-    const markerPress = (e, itemId) => {
+    const markerPress = (e, itemId, name) => {
         e.stopPropagation();
-        navigation.navigate("Marker", { itemId: itemId });
+        navigation.navigate("Marker", { itemId: itemId, name: name });
     };
 
-    let markers = markerCoords.map(({ id, latitude, longitude }) => (
+    let markers = markerCoords.map(({ id, name, latitude, longitude }) => (
         <Marker
             key={id}
             coordinate={{ latitude, longitude }}
-            title={`Marker ${id}`}
-            onPress={(e) => markerPress(e, id)}
+            title={`${name}`}
+            onPress={(e) => markerPress(e, id, name)}
         />
     ));
 
     //https://github.com/react-native-maps/react-native-maps
+
+    [showDialog, setShowDialog] = useState(false);
+    [newCoords, setNewCoords] = useState(null);
+
+    const addMarkerDialog = (inputText) => {
+        let markerName = "Marker";
+        if (inputText) {
+            markerName = inputText;
+        }
+        console.log(markerName);
+        addMarker(markerName, newCoords);
+        setShowDialog(false);
+    };
+
     return (
         <View style={styles.container}>
+            <DialogInput
+                isDialogVisible={showDialog}
+                title={"Marker title"}
+                message={"Input marker title"}
+                submitInput={(inputText) => {
+                    addMarkerDialog(inputText);
+                }}
+                closeDialog={() => {
+                    setShowDialog(false);
+                }}
+            ></DialogInput>
             <MapView
                 style={{ alignSelf: "stretch", height: "100%" }}
                 provider={PROVIDER_GOOGLE}
                 initialRegion={startRegion}
-                onPress={addMarker}
+                onPress={(e) => {
+                    setNewCoords(e.nativeEvent.coordinate);
+                    setShowDialog(true);
+                    //addMarker(e);
+                }}
                 showsUserLocation={true}
                 showsMyLocationButton={true}
                 onUserLocationChange={(e) => {
@@ -143,8 +174,8 @@ function getDistance(lat1, lng1, lat2, lng2) {
 async function schedulePushNotification(userCoords, marker) {
     const identifier = await Notifications.scheduleNotificationAsync({
         content: {
-            title: `Marker ${marker.id} is near`,
-            body: `Marker ${marker.id} is ${Math.ceil(
+            title: `Marker ${marker.name} is near`,
+            body: `Marker ${marker.name} is ${Math.ceil(
                 getDistance(
                     userCoords.latitude,
                     userCoords.longitude,

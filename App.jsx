@@ -18,7 +18,7 @@ function App() {
     useEffect(() => {
         db.transaction((tx) => {
             tx.executeSql(
-                "create table if not exists markers (id integer primary key autoincrement, latitude real, longitude real); ",
+                "create table if not exists markers (id integer primary key autoincrement, name text, latitude real, longitude real); ",
                 [],
                 null,
                 (_, e) => console.log(e)
