@@ -16,6 +16,7 @@ function App() {
     const [markerCoords, setMarkerCoords] = useState([]);
 
     useEffect(() => {
+        /*
         db.transaction((tx) => {
             tx.executeSql(
                 "create table if not exists markers (id integer primary key autoincrement, name text, latitude real, longitude real); ",
@@ -30,6 +31,7 @@ function App() {
                 (_, e) => console.log(e)
             );
         });
+        */
 
         //https://docs.expo.dev/versions/latest/sdk/location/
         requestLocationPermissionsAsync = async () => {
